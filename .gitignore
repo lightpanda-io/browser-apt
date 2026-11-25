@@ -1,0 +1,5 @@
+# Local publisher inputs and generated repository files
+/incoming/
+/previous/
+/public/
+/release.json
