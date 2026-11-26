@@ -1,6 +1,6 @@
 name: Publish public Lightpanda repository
 
-run-name: Publish Lightpanda ${{ inputs.release_tag }} to public test repository
+run-name: Publish Lightpanda ${{ inputs.release_tag }} to APT repository
 
 on:
   workflow_dispatch:
@@ -14,21 +14,19 @@ permissions:
   contents: read
   id-token: write
 
-# All writers to this prefix must use this group. Concurrency is not a FIFO queue.
+# All writers to this repository must use this group. Concurrency is not a FIFO queue.
 concurrency:
-  group: public-lightpanda-test
+  group: publish-lightpanda-apt
   cancel-in-progress: false
 
 jobs:
   publish:
     runs-on: ubuntu-24.04
-    environment: public-test
     timeout-minutes: 30
     env:
       GH_TOKEN: ${{ github.token }}
       RELEASE_TAG: ${{ inputs.release_tag }}
       BUCKET: ${{ vars.APT_BUCKET }}
-      APT_S3_PREFIX: ${{ vars.APT_S3_PREFIX }}
       APT_PUBLIC_URL: ${{ vars.APT_PUBLIC_URL }}
       APT_SIGNING_FINGERPRINT: ${{ vars.APT_SIGNING_FINGERPRINT }}
       AWS_REGION: ${{ vars.AWS_REGION || 'eu-central-1' }}
@@ -40,22 +38,17 @@ jobs:
           set -euo pipefail
 
           if [ -z "$BUCKET" ]; then
-            echo "Set APT_BUCKET in the public-test environment." >&2
-            exit 1
-          fi
-
-          if [ -z "$APT_S3_PREFIX" ]; then
-            echo "Set APT_S3_PREFIX in the public-test environment." >&2
+            echo "Set the APT_BUCKET repository variable." >&2
             exit 1
           fi
 
           if [ -z "$APT_PUBLIC_URL" ]; then
-            echo "Set APT_PUBLIC_URL in the public-test environment." >&2
+            echo "Set the APT_PUBLIC_URL repository variable." >&2
             exit 1
           fi
 
           if [ -z "$APT_SIGNING_FINGERPRINT" ]; then
-            echo "Set APT_SIGNING_FINGERPRINT in the public-test environment." >&2
+            echo "Set the APT_SIGNING_FINGERPRINT repository variable." >&2
             exit 1
           fi
 
@@ -109,7 +102,7 @@ jobs:
         run: |
           mkdir -p previous/pool
           aws s3 sync \
-            "s3://$BUCKET/$APT_S3_PREFIX/pool/" \
+            "s3://$BUCKET/pool/" \
             previous/pool/ \
             --only-show-errors
 
