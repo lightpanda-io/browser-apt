@@ -74,13 +74,12 @@ config="$work/aptly.conf"
 jq --null-input \
   --arg root "$work/aptly" \
   --arg bucket "$BUCKET" \
-  --arg prefix "$APT_S3_PREFIX" \
   --arg region "$AWS_REGION" \
   '{
     rootDir: $root,
     architectures: ["amd64", "arm64"],
     S3PublishEndpoints: {
-      lightpanda: {bucket: $bucket, prefix: $prefix, region: $region, acl: "none"}
+      lightpanda: {bucket: $bucket, region: $region, acl: "none"}
     }
   }' > "$config"
 
@@ -117,7 +116,7 @@ Components: main
 Signed-By: /etc/apt/keyrings/lightpanda.asc
 EOF
 
-repository_url="s3://$BUCKET/$APT_S3_PREFIX"
+repository_url="s3://$BUCKET"
 aws s3 cp "$work/lightpanda.asc" "$repository_url/lightpanda.asc" \
   --cache-control 'no-cache' --only-show-errors
 aws s3 cp "$work/lightpanda.sources" "$repository_url/lightpanda.sources" \
